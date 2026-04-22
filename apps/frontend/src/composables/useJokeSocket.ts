@@ -3,7 +3,7 @@ import { io, type Socket } from 'socket.io-client';
 import { v4 as uuidv4 } from 'uuid';
 import type { Joke } from '../table/types';
 
-const GATEWAY_URL = 'http://localhost:3000/jokes';
+const GATEWAY_URL = `${import.meta.env.VITE_GATEWAY_URL}/jokes`;
 
 export function useJokeSocket() {
   const jokes = ref<Joke[]>([]);

@@ -4,6 +4,7 @@ import {
   BehaviorSubject,
   Subscription,
   switchMap,
+  exhaustMap,
   timer,
   catchError,
   EMPTY,
@@ -40,16 +41,19 @@ export class JokesService {
 
     const sub = interval$
       .pipe(
-        switchMap((sec) => timer(0, sec * 1000)),
-        switchMap(() =>
-          merge(
-            ...activeSources.map((s) =>
-              s.fetch().pipe(
-                catchError((err) => {
-                  this.logger.error(`Fetch failed [${s.id}]: ${err.message}`);
-                  return EMPTY;
-                }),
-                take(1),
+        switchMap((sec) =>
+          timer(0, sec * 1000).pipe(
+            exhaustMap(() =>
+              merge(
+                ...activeSources.map((s) =>
+                  s.fetch().pipe(
+                    catchError((err) => {
+                      this.logger.error(`Fetch failed [${s.id}]: ${err.message}`);
+                      return EMPTY;
+                    }),
+                    take(1),
+                  ),
+                ),
               ),
             ),
           ),

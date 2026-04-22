@@ -88,6 +88,7 @@ export class JokesGateway
     @MessageBody() data: { intervalSec: number },
   ) {
     const challenge = client.handshake.query.challenge;
+    this.logger.log(`[change-interval] received: challenge=${challenge}, intervalSec=${data?.intervalSec}`);
     this.commandBus.execute(new ChangeIntervalCommand(challenge, data.intervalSec));
   }
 }

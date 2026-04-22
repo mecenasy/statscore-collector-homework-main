@@ -2,7 +2,10 @@
   "name": "@statscore-collector-homework/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down"
+  },
   "private": true,
   "devDependencies": {
     "@nx/esbuild": "22.4.2",

@@ -27,7 +27,7 @@ const availableSources = ref<{ id: string; name: string }[]>([]);
 
 onMounted(async () => {
   try {
-    const res = await fetch('http://localhost:3000/jokes/sources');
+    const res = await fetch(`${import.meta.env.VITE_GATEWAY_URL}/jokes/sources`);
     availableSources.value = await res.json();
     selectedSources.value = availableSources.value.map((s) => s.id);
   } catch {
