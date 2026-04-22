@@ -9,6 +9,7 @@ export interface Flags {
 
 export interface Joke {
   id: number;
+  source: string;
   category: string;
   setup: string;
   delivery: string;

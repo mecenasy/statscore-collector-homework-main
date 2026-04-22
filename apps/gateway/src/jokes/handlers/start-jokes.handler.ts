@@ -1,12 +1,17 @@
+import { Inject } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { StartJokesCommand } from '../commands/';
-import { JokesService } from '../jokes.service';
+import { ClientProxy } from '@nestjs/microservices';
+import { StartJokesCommand } from '../commands';
 
 @CommandHandler(StartJokesCommand)
 export class StartJokesHandler implements ICommandHandler<StartJokesCommand> {
-  constructor(private readonly jokesService: JokesService) {}
+  constructor(@Inject('EMITTER_CLIENT') private readonly client: ClientProxy) {}
 
   async execute(command: StartJokesCommand): Promise<void> {
-    this.jokesService.start(command.challenge, command.intervalSec);
+    this.client.emit('start', {
+      challenge: command.challenge,
+      intervalSec: command.intervalSec,
+      sources: command.sources,
+    });
   }
 }

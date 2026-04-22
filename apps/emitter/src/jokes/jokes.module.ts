@@ -1,33 +1,40 @@
-import { Global, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
+import { HttpModule } from '@nestjs/axios';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { JokesGateway } from './jokes.gateway';
+import { JokesController } from './jokes.controller';
 import { JokesService } from './jokes.service';
-import { JokesEventsController } from './jokes.events.controller';
-import { JokesHttpController } from './jokes.http.controller';
-import { SourceRegistryService } from './sources';
+import { JokeApiSource } from './sources';
 import { StartJokesHandler, StopJokesHandler, ChangeIntervalHandler } from './handlers';
 
 const CommandHandlers = [StartJokesHandler, StopJokesHandler, ChangeIntervalHandler];
 
-@Global()
 @Module({
   imports: [
     CqrsModule,
+    HttpModule,
     ClientsModule.register([
       {
-        name: 'EMITTER_CLIENT',
+        name: 'GATEWAY_CLIENT',
         transport: Transport.RMQ,
         options: {
           urls: ['amqp://localhost:5672'],
-          queue: 'jokes_commands',
+          queue: 'jokes_events',
           queueOptions: { durable: false },
         },
       },
     ]),
   ],
-  controllers: [JokesEventsController, JokesHttpController],
-  providers: [JokesGateway, JokesService, SourceRegistryService, ...CommandHandlers],
-  exports: [JokesGateway],
+  controllers: [JokesController],
+  providers: [
+    JokesService,
+    JokeApiSource,
+    {
+      provide: 'JOKE_SOURCES',
+      useFactory: (src: JokeApiSource) => [src],
+      inject: [JokeApiSource],
+    },
+    ...CommandHandlers,
+  ],
 })
 export class JokesModule {}

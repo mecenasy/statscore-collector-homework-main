@@ -11,7 +11,7 @@ import {
 import { CommandBus } from '@nestjs/cqrs';
 import { Subscription } from 'rxjs';
 import { Server, Socket } from 'socket.io';
-import { StartJokesCommand, StopJokesCommand, ChangeIntervalCommand } from './commands/';
+import { StartJokesCommand, StopJokesCommand, ChangeIntervalCommand } from './commands';
 import { JokesService } from './jokes.service';
 
 interface CustomQuery {
@@ -68,10 +68,12 @@ export class JokesGateway
   @SubscribeMessage('start')
   handleStart(
     @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody() data: { intervalSec: number },
+    @MessageBody() data: { intervalSec: number; sources?: string[] },
   ) {
     const challenge = client.handshake.query.challenge;
-    this.commandBus.execute(new StartJokesCommand(challenge, data.intervalSec ?? 5));
+    this.commandBus.execute(
+      new StartJokesCommand(challenge, data.intervalSec ?? 5, data.sources ?? ['joke-api']),
+    );
   }
 
   @SubscribeMessage('stop')

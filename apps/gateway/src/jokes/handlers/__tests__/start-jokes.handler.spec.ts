@@ -1,28 +1,36 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { StartJokesHandler } from '../start-jokes.handler.js';
-import { StartJokesCommand } from '../../commands/index.js';
+import { StartJokesHandler } from '../start-jokes.handler';
+import { StartJokesCommand } from '../../commands';
 
 describe('StartJokesHandler', () => {
   let handler: StartJokesHandler;
-  let jokesService: { start: ReturnType<typeof vi.fn> };
+  let client: { emit: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
-    jokesService = { start: vi.fn() };
-    handler = new StartJokesHandler(jokesService as never);
+    client = { emit: vi.fn() };
+    handler = new StartJokesHandler(client as never);
   });
 
-  it('calls jokesService.start with challenge and intervalSec', async () => {
-    const command = new StartJokesCommand('ch-1', 5);
+  it('emits start event to emitter with challenge, intervalSec and sources', async () => {
+    const command = new StartJokesCommand('ch-1', 5, ['joke-api']);
     await handler.execute(command);
 
-    expect(jokesService.start).toHaveBeenCalledOnce();
-    expect(jokesService.start).toHaveBeenCalledWith('ch-1', 5);
+    expect(client.emit).toHaveBeenCalledOnce();
+    expect(client.emit).toHaveBeenCalledWith('start', {
+      challenge: 'ch-1',
+      intervalSec: 5,
+      sources: ['joke-api'],
+    });
   });
 
-  it('passes the correct intervalSec from command', async () => {
-    const command = new StartJokesCommand('ch-2', 10);
+  it('passes all sources from command', async () => {
+    const command = new StartJokesCommand('ch-2', 10, ['joke-api', 'source-b']);
     await handler.execute(command);
 
-    expect(jokesService.start).toHaveBeenCalledWith('ch-2', 10);
+    expect(client.emit).toHaveBeenCalledWith('start', {
+      challenge: 'ch-2',
+      intervalSec: 10,
+      sources: ['joke-api', 'source-b'],
+    });
   });
 });

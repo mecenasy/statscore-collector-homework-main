@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ref } from 'vue';
 
 vi.mock('socket.io-client');
 vi.mock('uuid', () => ({ v4: () => 'test-uuid' }));
@@ -35,10 +34,19 @@ describe('useJokeSocket', () => {
     );
   });
 
-  it('emits start event with intervalSec', async () => {
+  it('emits start event with intervalSec and default sources', async () => {
     const { start } = await getComposable();
     start(10);
-    expect(mockSocket.emit).toHaveBeenCalledWith('start', { intervalSec: 10 });
+    expect(mockSocket.emit).toHaveBeenCalledWith('start', { intervalSec: 10, sources: ['joke-api'] });
+  });
+
+  it('emits start event with provided sources', async () => {
+    const { start } = await getComposable();
+    start(10, ['joke-api', 'source-b']);
+    expect(mockSocket.emit).toHaveBeenCalledWith('start', {
+      intervalSec: 10,
+      sources: ['joke-api', 'source-b'],
+    });
   });
 
   it('sets running to true after start', async () => {
@@ -90,7 +98,7 @@ describe('useJokeSocket', () => {
       ([event]) => event === 'joke',
     )?.[1] as ((data: unknown) => void) | undefined;
 
-    jokeHandler?.({ id: 1, category: 'Test', setup: 'Q', delivery: 'A', flags: {} });
+    jokeHandler?.({ id: 1, source: 'joke-api', category: 'Test', setup: 'Q', delivery: 'A', flags: {} });
     expect(jokes.value).toHaveLength(1);
   });
 

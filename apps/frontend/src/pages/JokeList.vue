@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import Button from '../components/Button.vue';
 import Select from '../components/Select.vue';
 import Badge from '../components/Badge.vue';
 import IntervalRadio from '../components/IntervalRadio.vue';
+import SourceSelector from '../components/SourceSelector.vue';
 import Table, { type Column } from '../table/Table.vue';
 import { useJokeSocket } from '../composables/useJokeSocket';
 import type { Joke } from '../table/types';
 
 const COLUMNS: Column<Joke>[] = [
+  { key: 'source',   label: 'Source' },
   { key: 'category', label: 'Category' },
   { key: 'setup',    label: 'Setup' },
   { key: 'delivery', label: 'Delivery' },
@@ -20,6 +22,18 @@ const { jokes, running, error, start, stop, changeInterval } = useJokeSocket();
 
 const selectedCategory = ref('');
 const intervalSec = ref(5);
+const selectedSources = ref<string[]>(['joke-api']);
+const availableSources = ref<{ id: string; name: string }[]>([]);
+
+onMounted(async () => {
+  try {
+    const res = await fetch('http://localhost:3000/jokes/sources');
+    availableSources.value = await res.json();
+    selectedSources.value = availableSources.value.map((s) => s.id);
+  } catch {
+    availableSources.value = [{ id: 'joke-api', name: 'JokeAPI.dev' }];
+  }
+});
 
 const availableCategories = computed(() => {
   const seen = new Set<string>();
@@ -35,7 +49,7 @@ const filteredJokes = computed(() =>
 );
 
 function toggle() {
-  running.value ? stop() : start(intervalSec.value);
+  running.value ? stop() : start(intervalSec.value, selectedSources.value);
 }
 
 function onIntervalChange(sec: number) {
@@ -55,6 +69,10 @@ function onIntervalChange(sec: number) {
         :options="availableCategories"
         allOption
       />
+      <SourceSelector
+        v-model="selectedSources"
+        :sources="availableSources"
+      />
       <span class="joke-list__spacer" />
       <span v-if="error" class="joke-list__error">{{ error }}</span>
       <IntervalRadio
@@ -67,6 +85,7 @@ function onIntervalChange(sec: number) {
     </div>
 
     <Table :columns="COLUMNS" :rows="filteredJokes" :empty-text="EMPTY_TEXT" :empty="filteredJokes.length === 0">
+      <template #source="{ row }">{{ row.source }}</template>
       <template #category="{ row }">{{ row.category }}</template>
       <template #setup="{ row }">{{ row.setup }}</template>
       <template #delivery="{ row }">{{ row.delivery }}</template>
@@ -86,7 +105,7 @@ function onIntervalChange(sec: number) {
 
 <style scoped lang="scss">
 .joke-list {
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 32px 24px;
   font-family: system-ui, sans-serif;
@@ -103,6 +122,7 @@ function onIntervalChange(sec: number) {
     align-items: center;
     gap: 12px;
     margin-bottom: 12px;
+    flex-wrap: wrap;
   }
 
   &__spacer {

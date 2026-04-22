@@ -1,28 +1,34 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ChangeIntervalHandler } from '../change-interval.handler.js';
-import { ChangeIntervalCommand } from '../../commands/index.js';
+import { ChangeIntervalHandler } from '../change-interval.handler';
+import { ChangeIntervalCommand } from '../../commands';
 
 describe('ChangeIntervalHandler', () => {
   let handler: ChangeIntervalHandler;
-  let jokesService: { changeInterval: ReturnType<typeof vi.fn> };
+  let client: { emit: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
-    jokesService = { changeInterval: vi.fn() };
-    handler = new ChangeIntervalHandler(jokesService as never);
+    client = { emit: vi.fn() };
+    handler = new ChangeIntervalHandler(client as never);
   });
 
-  it('calls jokesService.changeInterval with challenge and intervalSec', async () => {
+  it('emits change-interval event to emitter with challenge and intervalSec', async () => {
     const command = new ChangeIntervalCommand('ch-1', 10);
     await handler.execute(command);
 
-    expect(jokesService.changeInterval).toHaveBeenCalledOnce();
-    expect(jokesService.changeInterval).toHaveBeenCalledWith('ch-1', 10);
+    expect(client.emit).toHaveBeenCalledOnce();
+    expect(client.emit).toHaveBeenCalledWith('change-interval', {
+      challenge: 'ch-1',
+      intervalSec: 10,
+    });
   });
 
   it('passes the correct intervalSec from command', async () => {
     const command = new ChangeIntervalCommand('ch-2', 15);
     await handler.execute(command);
 
-    expect(jokesService.changeInterval).toHaveBeenCalledWith('ch-2', 15);
+    expect(client.emit).toHaveBeenCalledWith('change-interval', {
+      challenge: 'ch-2',
+      intervalSec: 15,
+    });
   });
 });

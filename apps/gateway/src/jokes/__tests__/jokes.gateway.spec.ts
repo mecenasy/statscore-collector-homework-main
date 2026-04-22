@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Subject } from 'rxjs';
-import { JokesGateway } from '../jokes.gateway.js';
-import { StartJokesCommand, StopJokesCommand, ChangeIntervalCommand } from '../commands/index.js';
-import type { JokeEvent } from '../jokes.service.js';
+import { JokesGateway } from '../jokes.gateway';
+import { StartJokesCommand, StopJokesCommand, ChangeIntervalCommand } from '../commands';
+import type { JokeEvent } from '../jokes.service';
 
 function makeClient(challenge: string) {
   return {

@@ -27,11 +27,11 @@ export function useJokeSocket() {
     });
   }
 
-  function start(intervalSec: number) {
+  function start(intervalSec: number, sources: string[] = ['joke-api']) {
     if (!socket?.connected) connect();
     running.value = true;
     error.value = null;
-    socket?.emit('start', { intervalSec });
+    socket?.emit('start', { intervalSec, sources });
   }
 
   function stop() {

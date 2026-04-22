@@ -2,27 +2,27 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { StopJokesHandler } from '../stop-jokes.handler';
 import { StopJokesCommand } from '../../commands';
 
-describe('StopJokesHandler', () => {
+describe('StopJokesHandler (emitter)', () => {
   let handler: StopJokesHandler;
-  let client: { emit: ReturnType<typeof vi.fn> };
+  let jokesService: { stop: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
-    client = { emit: vi.fn() };
-    handler = new StopJokesHandler(client as never);
+    jokesService = { stop: vi.fn() };
+    handler = new StopJokesHandler(jokesService as never);
   });
 
-  it('emits stop event to emitter with challenge', async () => {
+  it('calls jokesService.stop with the challenge', async () => {
     const command = new StopJokesCommand('ch-1');
     await handler.execute(command);
 
-    expect(client.emit).toHaveBeenCalledOnce();
-    expect(client.emit).toHaveBeenCalledWith('stop', { challenge: 'ch-1' });
+    expect(jokesService.stop).toHaveBeenCalledOnce();
+    expect(jokesService.stop).toHaveBeenCalledWith('ch-1');
   });
 
   it('passes the correct challenge from command', async () => {
     const command = new StopJokesCommand('ch-99');
     await handler.execute(command);
 
-    expect(client.emit).toHaveBeenCalledWith('stop', { challenge: 'ch-99' });
+    expect(jokesService.stop).toHaveBeenCalledWith('ch-99');
   });
 });

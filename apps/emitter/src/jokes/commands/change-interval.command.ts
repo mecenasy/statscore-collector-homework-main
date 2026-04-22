@@ -1,7 +1,6 @@
-export class StartJokesCommand {
+export class ChangeIntervalCommand {
   constructor(
     public readonly challenge: string,
     public readonly intervalSec: number,
-    public readonly sources: string[] = ['joke-api'],
   ) {}
 }

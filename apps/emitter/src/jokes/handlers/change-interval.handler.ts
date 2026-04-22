@@ -1,16 +1,12 @@
-import { Inject } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { ClientProxy } from '@nestjs/microservices';
 import { ChangeIntervalCommand } from '../commands';
+import { JokesService } from '../jokes.service';
 
 @CommandHandler(ChangeIntervalCommand)
 export class ChangeIntervalHandler implements ICommandHandler<ChangeIntervalCommand> {
-  constructor(@Inject('EMITTER_CLIENT') private readonly client: ClientProxy) {}
+  constructor(private readonly jokesService: JokesService) {}
 
   async execute(command: ChangeIntervalCommand): Promise<void> {
-    this.client.emit('change-interval', {
-      challenge: command.challenge,
-      intervalSec: command.intervalSec,
-    });
+    this.jokesService.changeInterval(command.challenge, command.intervalSec);
   }
 }
