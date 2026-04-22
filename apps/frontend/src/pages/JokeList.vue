@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import axios from 'axios';
 import Button from '../components/Button.vue';
 import Select from '../components/Select.vue';
 import Badge from '../components/Badge.vue';
+import IntervalRadio from '../components/IntervalRadio.vue';
 import Table, { type Column } from '../table/Table.vue';
+import { useJokeSocket } from '../composables/useJokeSocket';
 import type { Joke } from '../table/types';
 
 const COLUMNS: Column<Joke>[] = [
@@ -13,13 +14,12 @@ const COLUMNS: Column<Joke>[] = [
   { key: 'delivery', label: 'Delivery' },
   { key: 'flags',    label: 'Flags' },
 ];
+const EMPTY_TEXT = 'Click "Start" to load jokes.';
 
-const EMPTY_TEXT = 'Click "Fetch a joke" to load data.';
+const { jokes, running, error, start, stop, changeInterval } = useJokeSocket();
 
-const jokes = ref<Joke[]>([]);
-const loading = ref(false);
-const error = ref<string | null>(null);
 const selectedCategory = ref('');
+const intervalSec = ref(5);
 
 const availableCategories = computed(() => {
   const seen = new Set<string>();
@@ -31,28 +31,16 @@ const availableCategories = computed(() => {
 const filteredJokes = computed(() =>
   selectedCategory.value
     ? jokes.value.filter((j) => j.category === selectedCategory.value)
-    : jokes.value
+    : jokes.value,
 );
 
-async function fetchJoke() {
-  loading.value = true;
-  error.value = null;
-  try {
-    const { data } = await axios.get(
-      'https://v2.jokeapi.dev/joke/Any?type=twopart'
-    );
-    jokes.value.push({
-      id: data.id,
-      category: data.category,
-      setup: data.setup,
-      delivery: data.delivery,
-      flags: data.flags,
-    });
-  } catch {
-    error.value = 'Failed to fetch a joke. Please try again.';
-  } finally {
-    loading.value = false;
-  }
+function toggle() {
+  running.value ? stop() : start(intervalSec.value);
+}
+
+function onIntervalChange(sec: number) {
+  intervalSec.value = sec;
+  if (running.value) changeInterval(sec);
 }
 </script>
 
@@ -69,12 +57,16 @@ async function fetchJoke() {
       />
       <span class="joke-list__spacer" />
       <span v-if="error" class="joke-list__error">{{ error }}</span>
-      <Button :loading="loading" @click="fetchJoke">
-        Fetch a joke
+      <IntervalRadio
+        :model-value="intervalSec"
+        @update:model-value="onIntervalChange"
+      />
+      <Button @click="toggle">
+        {{ running ? 'Stop' : 'Start' }}
       </Button>
     </div>
 
-    <Table :columns="COLUMNS" :rows="filteredJokes" :empty-text="EMPTY_TEXT">
+    <Table :columns="COLUMNS" :rows="filteredJokes" :empty-text="EMPTY_TEXT" :empty="filteredJokes.length === 0">
       <template #category="{ row }">{{ row.category }}</template>
       <template #setup="{ row }">{{ row.setup }}</template>
       <template #delivery="{ row }">{{ row.delivery }}</template>

@@ -6,35 +6,13 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/esbuild:esbuild",
+      "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
       "options": {
-        "platform": "node",
         "outputPath": "dist/apps/gateway",
-        "format": ["esm"],
-        "bundle": true,
         "main": "apps/gateway/src/main.ts",
         "tsConfig": "apps/gateway/tsconfig.app.json",
-        "assets": ["apps/gateway/src/assets"],
-        "generatePackageJson": true,
-        "esbuildOptions": {
-          "sourcemap": true,
-          "outExtension": {
-            ".js": ".js"
-          }
-        }
-      },
-      "configurations": {
-        "development": {},
-        "production": {
-          "esbuildOptions": {
-            "sourcemap": false,
-            "outExtension": {
-              ".js": ".js"
-            }
-          }
-        }
+        "assets": []
       }
     },
     "serve": {
@@ -48,10 +26,10 @@
       },
       "configurations": {
         "development": {
-          "buildTarget": "gateway:build:development"
+          "buildTarget": "gateway:build"
         },
         "production": {
-          "buildTarget": "gateway:build:production"
+          "buildTarget": "gateway:build"
         }
       }
     },
